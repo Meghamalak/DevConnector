@@ -2,6 +2,7 @@ const express = require("express");
 const gravatar = require("gravatar");
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
+const validateRegisterInput = require('../../validation/register');
 const router = express.Router();
 const User = require("../../models/User");
 const keys = require('../../config/keys');
@@ -11,6 +12,13 @@ const passport = require("passport");
 // @description Register User
 // @access Public Route
 router.post("/register", (req, res) => {
+    //Validation
+    const {errors, isValid} = validateRegisterInput(req.body);
+
+    if (!isValid) {
+        return res.status(400).json(errors);
+    }
+
     User.findOne({
             email: req.body.email,
         })
@@ -105,19 +113,14 @@ router.post('/login', (req, res) => {
         .catch();
 })
 
-//@route /api/users/current
+//@route GET /api/users/current
 //@desc Return the current user info
 //@access Private - this means there is an added layer in between the route and call back function
 
 router.get('/current', passport.authenticate('jwt', ({
     session: false
 })), (req, res) => {
-    return res.json({
-        msg: 'Success'
-        // id: req.user.id,
-        // email: req.user.email,
-        // name: req.user.name
-    });
+    return res.json(req.user);
 })
 
 //@route /api/users/delete
